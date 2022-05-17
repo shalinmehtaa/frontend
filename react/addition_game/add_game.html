@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Addition Game</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+    <style>
+        #app {
+            text-align: center;
+            font-family: sans-serif;
+        }
+
+        #problem {
+            font-size: 70px;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        #win {
+            color: green;
+            font-size: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- This is where the React app will be be rendered -->
+    <div id="app"></div>
+
+    <!-- text/babel is telling babel to transpile this JSX code -->
+    <script type="text/babel">
+
+        // Can imagine a case where you reuse the Win component for different games with custom win messages
+        class Win extends React.Component {
+            render() {
+                return (
+                    <div id="win">
+                        You won {this.props.game}! Congratulations!
+                    </div>
+                )
+            }
+        }
+
+        class App extends React.Component {
+
+            constructor(props) {
+                super(props)
+                this.state = {
+                    num1: 1,
+                    num2: 1,
+                    response: "",
+                    incorrect: false,
+                    score: 0,
+                }
+            }
+
+            // There must be function called render()
+            render() {
+                if (this.state.score === 5) {
+                    const game = "the addition game"
+                    return <Win game={game} />;
+                } else {
+                    return this.renderProblem();
+                }
+            }
+
+            renderProblem() {
+
+                return (
+                    <div>
+                        <div id="problem">
+                            <h2 className={this.state.incorrect ? "incorrect" : ""}>{this.state.num1} + {this.state.num2}</h2>
+                        </div>
+                        <input onKeyPress={this.inputKeyPress} onChange={this.updateResponse} value={this.state.response} />
+                        <br />
+                        <div>
+                            Score: {this.state.score}
+                        </div>
+                    </div>
+                )
+            }
+
+            // For event onChange; target here is the input field and it's value is the response of the user
+            updateResponse = (event) => {
+                this.setState({ response: event.target.value })
+            }
+
+            // For event onKeyPress; target is the input field and keypress the event is listening for is the return key
+            inputKeyPress = (event) => {
+                if (event.key === "Enter") {
+                    // Need to use parseInt and input field return values are string by default
+                    const answer = parseInt(this.state.response)
+                    // parseInt of a string is NaN so the below condition will be able to handle cases where users enter a random a string
+                    if (answer === (this.state.num1 + this.state.num2)) {
+                        this.setState(state => ({
+                            // Math.random returns a floating point number between 0 and 1 (excluding 1 itself)
+                            num1: Math.ceil(Math.random() * 10),
+                            num2: Math.ceil(Math.random() * 10),
+                            response: "",
+                            incorrect: false,
+                            score: state.score + 1
+                        }))
+                    } else {
+                        this.setState({
+                            response: "",
+                            incorrect: true
+                        })
+                    }
+                }
+            }
+        }
+
+        // Using ReactDOM to insert our React component into the DOM
+        ReactDOM.render(<App />, document.querySelector("#app"))
+
+    </script>
+
+</body>
+
+</html>
