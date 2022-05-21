@@ -23,8 +23,9 @@
                     base: "USD",
                     other: "EUR",
                     value: 0,
-                    converted: 0
+                    converted: 0,
                 }
+                this.cache = {}
             }
 
             render() {
@@ -40,7 +41,7 @@
                             <select onChange={this.handleChange} name="other" value={this.state.other}>{this.currencies.map(currency =>
                                 <option key={currency} value={currency}>{currency}</option>
                             )}</select>
-                            <input disabled={true} value={this.state.converted} />
+                            <input disabled={true} value={this.state.converted === null ? "Calculating..." : this.state.converted} />
                         </div>
                     </div>
                 )
@@ -54,7 +55,8 @@
 
             changeValue = (event) => {
                 this.setState({
-                    value: event.target.value
+                    value: event.target.value,
+                    converted: null
                 }, this.convertRate)
             }
 
@@ -64,13 +66,34 @@
                     return
                 }
 
-                fetch(`https://api.exchangeratesapi.io/latest?base=${this.state.base}`)
+                if (this.cache[this.state.base] !== undefined && Date.now() - this.cache[this.state.base].timestamp < 1000 * 60) {
+                    this.setState({
+                        converted: this.state.cache[this.state.base].rates[this.state.other] * value
+                    })
+                    return;
+                }
+
+                const myHeaders = new Headers();
+                myHeaders.append("apikey", "pgJyDeXA4nXKWYstovPhBdGwtBHuL1jr");
+
+                const requestOptions = {
+                    method: 'GET',
+                    redirect: 'follow',
+                    headers: myHeaders
+                };
+
+                fetch(`https://api.exchangeratesapi.io/v1/latest?base=${this.state.base}`, requestOptions)
                     .then(response => response.json())
                     .then(data => {
+                        this.cache[this.state.base] = {
+                            rates: data.rates,
+                            timestamp: Date.now(),
+                        }
                         this.setState({
                             converted: data.rates[this.state.other] * value
                         })
                     })
+                    .catch(error => console.log(error))
             }
         }
 
