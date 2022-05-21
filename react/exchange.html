@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>FX Rates Converter</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+
+        class App extends React.Component {
+
+            constructor(props) {
+                super(props)
+                this.currencies = ["AUD", "INR", "USD", "GBP", "EUR", "JPY", "CAD", "NZD", "CNY", "SGD"]
+                this.state = {
+                    base: "USD",
+                    other: "EUR",
+                    value: 0,
+                    converted: 0
+                }
+            }
+
+            render() {
+                return (
+                    <div>
+                        <div>
+                            <select onChange={this.handleChange} name="base" value={this.state.base}>{this.currencies.map(currency =>
+                                <option key={currency} value={currency}>{currency}</option>
+                            )}</select>
+                            <input onChange={this.changeValue} value={this.state.value} />
+                        </div>
+                        <div>
+                            <select onChange={this.handleChange} name="other" value={this.state.other}>{this.currencies.map(currency =>
+                                <option key={currency} value={currency}>{currency}</option>
+                            )}</select>
+                            <input disabled={true} value={this.state.converted} />
+                        </div>
+                    </div>
+                )
+            }
+
+            handleChange = (event) => {
+                this.setState({
+                    [event.target.name]: event.target.value
+                }, this.convertRate)
+            }
+
+            changeValue = (event) => {
+                this.setState({
+                    value: event.target.value
+                }, this.convertRate)
+            }
+
+            convertRate = () => {
+                const value = parseFloat(this.state.value)
+                if (isNaN(value)) {
+                    return
+                }
+
+                fetch(`https://api.exchangeratesapi.io/latest?base=${this.state.base}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.setState({
+                            converted: data.rates[this.state.other] * value
+                        })
+                    })
+            }
+        }
+
+        ReactDOM.render(<App />, document.querySelector("#app"))
+
+    </script>
+</body>
+
+</html>
